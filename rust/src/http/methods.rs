@@ -5,15 +5,15 @@ use crate::error::ThinError;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods
 pub enum HttpMethod {
-    GET,
-    HEAD,
-    POST,
-    PUT,
-    DELETE,
-    CONNECT,
-    OPTIONS,
-    TRACE,
-    PATCH,
+    Get,
+    Head,
+    Post,
+    Put,
+    Delete,
+    Connect,
+    Options,
+    Trace,
+    Patch,
 }
 
 impl Display for HttpMethod {
@@ -28,15 +28,15 @@ impl TryFrom<&str> for HttpMethod {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let res = match value {
-            "GET" => HttpMethod::GET,
-            "HEAD" => HttpMethod::HEAD,
-            "POST" => HttpMethod::POST,
-            "PUT" => HttpMethod::PUT,
-            "DELETE" => HttpMethod::DELETE,
-            "CONNECT" => HttpMethod::CONNECT,
-            "OPTIONS" => HttpMethod::OPTIONS,
-            "TRACE" => HttpMethod::TRACE,
-            "PATCH" => HttpMethod::PATCH,
+            "GET" => HttpMethod::Get,
+            "HEAD" => HttpMethod::Head,
+            "POST" => HttpMethod::Post,
+            "PUT" => HttpMethod::Put,
+            "DELETE" => HttpMethod::Delete,
+            "CONNECT" => HttpMethod::Connect,
+            "OPTIONS" => HttpMethod::Options,
+            "TRACE" => HttpMethod::Trace,
+            "PATCH" => HttpMethod::Patch,
             s => return Err(ThinError::new(format!("illegal http method: {s}").into())),
         };
 

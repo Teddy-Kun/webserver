@@ -1,13 +1,17 @@
 use std::{
     collections::HashMap,
-    fmt::Display,
+    fs,
     io::{BufRead, BufReader, Write},
     net::{TcpListener, TcpStream},
 };
 
-use crate::error::ThinError;
+use crate::{
+    error::ThinError,
+    http::{HttpMethod, HttpResponse, HttpStatusCode},
+};
 
 mod error;
+mod http;
 
 fn main() {
     if let Err(e) = create_listener() {
@@ -20,7 +24,7 @@ fn create_listener() -> Result<(), ThinError> {
     let listener = TcpListener::bind("127.0.0.1:7878")?;
 
     for stream in listener.incoming() {
-        let stream = match stream {
+        let mut stream = match stream {
             Ok(s) => s,
             Err(e) => {
                 eprintln!("Error reading stream: {}", e);
@@ -28,59 +32,21 @@ fn create_listener() -> Result<(), ThinError> {
             }
         };
 
-        if let Err(e) = handle_connection(stream) {
+        if let Err(e) = handle_connection(&mut stream) {
             eprintln!("Error handling connection: {}", e);
-            continue;
+            let response = HttpResponse::new(HttpStatusCode::InternalServerError).into_string();
+            println!("{response}");
+            if let Err(e) = stream.write_all(response.as_bytes()) {
+                eprintln!("Error handling connection: {}", e);
+            }
         }
     }
 
     Ok(())
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-/// https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods
-enum HttpMethod {
-    GET,
-    HEAD,
-    POST,
-    PUT,
-    DELETE,
-    CONNECT,
-    OPTIONS,
-    TRACE,
-    PATCH,
-}
-
-impl Display for HttpMethod {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self) // identical to debug
-    }
-}
-
-// validate &str for being a valid http method
-impl TryFrom<&str> for HttpMethod {
-    type Error = ThinError;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let res = match value {
-            "GET" => HttpMethod::GET,
-            "HEAD" => HttpMethod::HEAD,
-            "POST" => HttpMethod::POST,
-            "PUT" => HttpMethod::PUT,
-            "DELETE" => HttpMethod::DELETE,
-            "CONNECT" => HttpMethod::CONNECT,
-            "OPTIONS" => HttpMethod::OPTIONS,
-            "TRACE" => HttpMethod::TRACE,
-            "PATCH" => HttpMethod::PATCH,
-            s => return Err(ThinError::new(format!("illegal http method: {s}").into())),
-        };
-
-        Ok(res)
-    }
-}
-
-fn handle_connection(mut stream: TcpStream) -> Result<(), ThinError> {
-    let buf_reader = BufReader::new(&stream);
+fn handle_connection(stream: &mut TcpStream) -> Result<(), ThinError> {
+    let buf_reader = BufReader::new(&*stream);
 
     let mut lines = buf_reader.lines();
 
@@ -102,7 +68,13 @@ fn handle_connection(mut stream: TcpStream) -> Result<(), ThinError> {
 
     println!("{method} {req_uri} {version}");
 
-    if method != HttpMethod::GET {
+    if version != "HTTP/1.1" {
+        let response = HttpResponse::new(HttpStatusCode::HttpVersionNotSupported);
+        stream.write_all(response.into_string().as_bytes())?;
+        return Ok(());
+    }
+
+    if method != HttpMethod::Get {
         return Err(ThinError::new(
             format!("unsupported http method: {method}").into(),
         ));
@@ -133,8 +105,18 @@ fn handle_connection(mut stream: TcpStream) -> Result<(), ThinError> {
 
     println!("Request: {headers:#?}\n");
 
-    let response = "HTTP/1.1 200 OK\r\n\r\n";
-    stream.write_all(response.as_bytes())?;
+    let http = if req_uri == "/" {
+        Ok(fs::read_to_string("./dist/index.html")?)
+    } else {
+        fs::read_to_string(format!("./dist/{}.html", &req_uri[1..]))
+    };
+
+    let response = match &http {
+        Ok(http) => HttpResponse::with_content(HttpStatusCode::Ok, http.as_str()),
+        Err(_e) => HttpResponse::new(HttpStatusCode::NotFound),
+    };
+
+    stream.write_all(response.into_string().as_bytes())?;
 
     Ok(())
 }
