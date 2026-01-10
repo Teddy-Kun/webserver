@@ -172,13 +172,13 @@ impl<'r> HttpResponse<'r> {
     }
 }
 
-impl<'r> Into<String> for HttpResponse<'r> {
-    fn into(self) -> String {
-        match self.content {
-            None => format!("HTTP/1.1 {}\r\n\r\n", self.status),
+impl<'r> From<HttpResponse<'r>> for String {
+    fn from(val: HttpResponse<'r>) -> String {
+        match val.content {
+            None => format!("HTTP/1.1 {}\r\n\r\n", val.status),
             Some(content) => format!(
                 "HTTP/1.1 {}\r\nContent-Length: {}\r\n\r\n{}",
-                self.status,
+                val.status,
                 content.len(),
                 content
             ),
