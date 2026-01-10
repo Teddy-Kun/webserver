@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+dhat = { version = "0.3.3", optional = true }
+
+[features]
+dhat-heap = ["dhat"]
 
 [profile.release]
 codegen-units = 1

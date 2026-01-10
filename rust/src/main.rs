@@ -13,7 +13,14 @@ use crate::{
 mod error;
 mod http;
 
+#[cfg(feature = "dhat-heap")]
+#[global_allocator]
+static ALLOC: dhat::Alloc = dhat::Alloc;
+
 fn main() {
+    #[cfg(feature = "dhat-heap")]
+    let _profiler = dhat::Profiler::new_heap();
+
     if let Err(e) = create_listener() {
         eprintln!("{}", e);
         std::process::exit(1);
@@ -23,7 +30,15 @@ fn main() {
 fn create_listener() -> Result<(), ThinError> {
     let listener = TcpListener::bind("127.0.0.1:7878")?;
 
+    #[cfg(feature = "dhat-heap")]
+    let mut counter: u8 = 0;
+
     for stream in listener.incoming() {
+        #[cfg(feature = "dhat-heap")]
+        {
+            counter += 1;
+        }
+
         let mut stream = match stream {
             Ok(s) => s,
             Err(e) => {
@@ -39,6 +54,11 @@ fn create_listener() -> Result<(), ThinError> {
             if let Err(e) = stream.write_all(response.as_bytes()) {
                 eprintln!("Error handling connection: {}", e);
             }
+        }
+
+        #[cfg(feature = "dhat-heap")]
+        if counter == 2 {
+            break;
         }
     }
 
