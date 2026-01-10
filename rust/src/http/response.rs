@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::fmt::Display;
 
 #[derive(Debug, Clone, Copy)]
@@ -95,6 +96,7 @@ impl Display for HttpStatusCode {
             HttpStatusCode::Found => "Found",
             HttpStatusCode::SeeOther => "See Other",
             HttpStatusCode::NotModified => "Not Modified",
+            #[allow(deprecated)] // we must implement it
             HttpStatusCode::UseProxy => "Use Proxy",
             HttpStatusCode::TemporaryRedirect => "Temporary Redirect",
             HttpStatusCode::PermanentRedirect => "Permanent Redirect",
