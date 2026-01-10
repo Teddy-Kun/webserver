@@ -13,6 +13,12 @@ impl ThinError {
     pub fn new(e: Box<dyn Error>) -> Self {
         Self { inner: Box::new(e) }
     }
+
+    pub fn str(s: &str) -> Self {
+        Self {
+            inner: Box::new(s.into()),
+        }
+    }
 }
 
 impl Error for ThinError {
