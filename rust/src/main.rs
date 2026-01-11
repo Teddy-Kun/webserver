@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     fs,
     io::{BufRead, BufReader, Write},
     net::{TcpListener, TcpStream},
@@ -106,6 +105,8 @@ fn handle_connection(stream: &mut TcpStream) -> Result<(), ThinError> {
     }
     #[cfg(feature = "print-headers")]
     {
+        use std::collections::HashMap;
+
         let headers: HashMap<Box<str>, Box<str>> = lines
             .map_while(Result::ok)
             .take_while(|line| !line.is_empty())
