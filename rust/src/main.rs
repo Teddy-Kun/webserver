@@ -41,15 +41,16 @@ fn create_listener() -> Result<(), ThinError> {
         {
             counter += 1;
         }
-        let mut stream = match stream {
-            Ok(s) => s,
-            Err(e) => {
-                eprintln!("Error reading stream: {}", e);
-                continue;
-            }
-        };
 
         thread_pool.execute(move || {
+            let mut stream = match stream {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("Error reading stream: {}", e);
+                    return;
+                }
+            };
+
             if let Err(e) = handle_connection(&mut stream) {
                 eprintln!("Error handling connection: {}", e);
                 let response = HttpResponse::new(HttpStatusCode::InternalServerError).into_string();
