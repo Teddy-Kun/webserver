@@ -6,7 +6,7 @@ use std::{
 
 pub struct ThreadPool {
     workers: Vec<Worker>,
-    sender: mpsc::Sender<Job>,
+    sender: Option<mpsc::Sender<Job>>,
 }
 
 impl ThreadPool {
@@ -24,7 +24,10 @@ impl ThreadPool {
 
         println!("{size} worker threads created");
 
-        Self { workers, sender }
+        Self {
+            workers,
+            sender: Some(sender),
+        }
     }
 
     pub fn execute<F>(&self, f: F)
@@ -32,7 +35,22 @@ impl ThreadPool {
         F: FnOnce() + Send + 'static,
     {
         let job = Box::new(f);
-        self.sender.send(job).expect("receiver is gone")
+        self.sender
+            .as_ref()
+            .expect("sender is gone")
+            .send(job)
+            .expect("receiver is gone")
+    }
+}
+
+impl Drop for ThreadPool {
+    fn drop(&mut self) {
+        drop(self.sender.take());
+
+        for worker in &mut self.workers.drain(..) {
+            println!("Shutting down worker {}", worker.id);
+            worker.thread.join().unwrap();
+        }
     }
 }
 
@@ -45,13 +63,19 @@ impl Worker {
     fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Self {
         let thread = thread::spawn(move || {
             loop {
-                let job = receiver
-                    .lock()
-                    .expect("receiver mutex is poisoned")
-                    .recv()
-                    .expect("sender is gone");
-                println!("Worker {id}, got a job; executing");
-                job();
+                let msg = receiver.lock().expect("receiver mutex is poisoned").recv();
+
+                match msg {
+                    Ok(job) => {
+                        println!("Worker {id}, got a job; executing");
+                        job();
+                    }
+
+                    Err(_) => {
+                        println!("Worker {id} disconnected; shutting down");
+                        break;
+                    }
+                }
             }
         });
         Self { id, thread }
