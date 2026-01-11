@@ -1,0 +1,18 @@
+---
+# Use the LLVM style as the base
+BasedOnStyle: LLVM
+
+# Use tabs for indentation
+UseTab: Always
+
+# Set the width of the tab (standard is 4 or 8)
+TabWidth: 4
+
+# This ensures that indentation and alignment use tabs
+IndentWidth: 4
+
+# Optional: Ensure braces wrap or don't wrap according to style
+# This stays consistent with the LLVM default unless changed.
+AllowShortFunctionsOnASingleLine: All
+---
+
