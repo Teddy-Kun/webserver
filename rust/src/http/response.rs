@@ -147,12 +147,12 @@ impl Display for HttpStatusCode {
 }
 
 #[derive(Debug)]
-pub struct HttpResponse<'r> {
+pub struct HttpResponse {
     status: HttpStatusCode,
-    content: Option<&'r str>,
+    content: Option<String>,
 }
 
-impl<'r> HttpResponse<'r> {
+impl HttpResponse {
     pub fn new(status: HttpStatusCode) -> Self {
         Self {
             status,
@@ -160,7 +160,7 @@ impl<'r> HttpResponse<'r> {
         }
     }
 
-    pub fn with_content(status: HttpStatusCode, content: &'r str) -> Self {
+    pub fn with_content(status: HttpStatusCode, content: String) -> Self {
         Self {
             status,
             content: Some(content),
@@ -172,8 +172,8 @@ impl<'r> HttpResponse<'r> {
     }
 }
 
-impl<'r> From<HttpResponse<'r>> for String {
-    fn from(val: HttpResponse<'r>) -> String {
+impl From<HttpResponse> for String {
+    fn from(val: HttpResponse) -> String {
         match val.content {
             None => format!("HTTP/1.1 {}\r\n\r\n", val.status),
             Some(content) => format!(
