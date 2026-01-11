@@ -3,15 +3,18 @@ use std::{
     fs,
     io::{BufRead, BufReader, Write},
     net::{TcpListener, TcpStream},
+    num::NonZeroUsize,
 };
 
 use crate::{
     error::ThinError,
     http::{HttpMethod, HttpResponse, HttpStatusCode},
+    thread_pool::ThreadPool,
 };
 
 mod error;
 mod http;
+mod thread_pool;
 
 #[cfg(feature = "dhat-heap")]
 #[global_allocator]
@@ -29,6 +32,7 @@ fn main() {
 
 fn create_listener() -> Result<(), ThinError> {
     let listener = TcpListener::bind("127.0.0.1:7878")?;
+    let thread_pool = ThreadPool::new(NonZeroUsize::new(8).unwrap());
 
     #[cfg(feature = "dhat-heap")]
     let mut counter: u8 = 0;
@@ -38,7 +42,6 @@ fn create_listener() -> Result<(), ThinError> {
         {
             counter += 1;
         }
-
         let mut stream = match stream {
             Ok(s) => s,
             Err(e) => {
@@ -47,17 +50,19 @@ fn create_listener() -> Result<(), ThinError> {
             }
         };
 
-        if let Err(e) = handle_connection(&mut stream) {
-            eprintln!("Error handling connection: {}", e);
-            let response = HttpResponse::new(HttpStatusCode::InternalServerError).into_string();
-            println!("{response}");
-            if let Err(e) = stream.write_all(response.as_bytes()) {
+        thread_pool.execute(move || {
+            if let Err(e) = handle_connection(&mut stream) {
                 eprintln!("Error handling connection: {}", e);
+                let response = HttpResponse::new(HttpStatusCode::InternalServerError).into_string();
+                println!("{response}");
+                if let Err(e) = stream.write_all(response.as_bytes()) {
+                    eprintln!("Error handling connection: {}", e);
+                }
             }
-        }
+        });
 
         #[cfg(feature = "dhat-heap")]
-        if counter == 2 {
+        if counter == 3 {
             break;
         }
     }
@@ -99,31 +104,33 @@ fn handle_connection(stream: &mut TcpStream) -> Result<(), ThinError> {
             format!("unsupported http method: {method}").into(),
         ));
     }
+    #[cfg(feature = "print-headers")]
+    {
+        let headers: HashMap<Box<str>, Box<str>> = lines
+            .map_while(Result::ok)
+            .take_while(|line| !line.is_empty())
+            .map(|line| {
+                let (key, value) = line
+                    .split_once(':')
+                    .ok_or(ThinError::str("missing http header delimiter"))?;
 
-    let headers: HashMap<Box<str>, Box<str>> = lines
-        .map_while(Result::ok)
-        .take_while(|line| !line.is_empty())
-        .map(|line| {
-            let (key, value) = line
-                .split_once(':')
-                .ok_or(ThinError::str("missing http header delimiter"))?;
+                let key = key.trim();
+                let value = value.trim();
 
-            let key = key.trim();
-            let value = value.trim();
+                if key.is_empty() {
+                    return Err(ThinError::str("http header key is empty"));
+                }
 
-            if key.is_empty() {
-                return Err(ThinError::str("http header key is empty"));
-            }
+                if value.is_empty() {
+                    return Err(ThinError::str("http header value is empty"));
+                }
 
-            if value.is_empty() {
-                return Err(ThinError::str("http header value is empty"));
-            }
+                Ok((Box::from(key), Box::from(value)))
+            })
+            .collect::<Result<_, ThinError>>()?;
 
-            Ok((Box::from(key), Box::from(value)))
-        })
-        .collect::<Result<_, ThinError>>()?;
-
-    println!("Request: {headers:#?}\n");
+        println!("Request: {headers:#?}\n");
+    }
 
     let http = if req_uri == "/" {
         Ok(fs::read_to_string("./dist/index.html")?)
