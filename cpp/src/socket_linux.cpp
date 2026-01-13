@@ -1,6 +1,7 @@
 #include "error.hpp"
 #include "socket.hpp"
 #include <expected>
+#include <format>
 #include <netinet/in.h>
 #include <print>
 #include <sys/socket.h>
@@ -9,7 +10,8 @@
 auto TcpListener::init() noexcept -> std::expected<TcpListener, Error> {
 	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd < 0)
-		return std::unexpected<Error>(std::in_place, "Error creating socket");
+		return std::unexpected<Error>(
+			std::in_place, std::format("Error creating socket: {}", server_fd));
 
 	// 3. Define the address (IP and Port)
 	sockaddr_in address;
@@ -18,11 +20,16 @@ auto TcpListener::init() noexcept -> std::expected<TcpListener, Error> {
 	address.sin_port =
 		htons(7878); // Host-to-Network Short (Endianness conversion)
 
-	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
-		return std::unexpected<Error>(std::in_place, "Bind failed");
+	const auto bind_res =
+		bind(server_fd, (struct sockaddr *)&address, sizeof(address));
+	if (bind_res < 0)
+		return std::unexpected<Error>(std::in_place,
+									  std::format("Bind failed: {}", bind_res));
 
-	if (listen(server_fd, 3) < 0)
-		return std::unexpected<Error>(std::in_place, "Listen failed");
+	const auto listen_res = listen(server_fd, 3);
+	if (listen_res < 0)
+		return std::unexpected<Error>(
+			std::in_place, std::format("Listen failed: {}", listen_res));
 
 	std::println("Server is listening on port 7878");
 
@@ -34,11 +41,13 @@ auto TcpListener::init() noexcept -> std::expected<TcpListener, Error> {
 		int client_socket =
 			accept(server_fd, (struct sockaddr *)&address, &addrlen);
 		if (client_socket < 0)
-			return std::unexpected<Error>(std::in_place, "Accept failed");
+			return std::unexpected<Error>(
+				std::in_place, std::format("Accept failed: {}", client_socket));
 
 		// 7. Receive data
-		std::vector<std::byte> buffer(4096);
+		std::vector<std::byte> buffer(1024);
 		ssize_t bytes_read = read(client_socket, buffer.data(), 1024);
+		buffer.resize(bytes_read);
 		std::println("Message received: len({})", bytes_read);
 
 		return buffer;
