@@ -1,6 +1,7 @@
 #pragma once
 
 #include "error.hpp"
+#include <cstdint>
 #include <expected>
 #include <functional>
 
@@ -11,7 +12,7 @@ class TcpListener {
 	TcpListener() = default;
 
   public:
-	static auto init() noexcept -> std::expected<TcpListener, Error>;
+	static auto init(uint16_t port) noexcept -> std::expected<TcpListener, Error>;
 	auto get_incoming() noexcept
 		-> std::expected<std::vector<std::byte>, Error>;
 };

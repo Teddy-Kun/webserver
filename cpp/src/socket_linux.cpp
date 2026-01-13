@@ -1,5 +1,6 @@
 #include "error.hpp"
 #include "socket.hpp"
+#include <cstdint>
 #include <expected>
 #include <format>
 #include <netinet/in.h>
@@ -7,7 +8,7 @@
 #include <sys/socket.h>
 #include <vector>
 
-auto TcpListener::init() noexcept -> std::expected<TcpListener, Error> {
+auto TcpListener::init(uint16_t port) noexcept -> std::expected<TcpListener, Error> {
 	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd < 0)
 		return std::unexpected<Error>(
@@ -18,7 +19,7 @@ auto TcpListener::init() noexcept -> std::expected<TcpListener, Error> {
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY; // Listen on all available interfaces
 	address.sin_port =
-		htons(7878); // Host-to-Network Short (Endianness conversion)
+		htons(port); // Host-to-Network Short (Endianness conversion)
 
 	const auto bind_res =
 		bind(server_fd, (struct sockaddr *)&address, sizeof(address));

@@ -10,7 +10,6 @@ class [[nodiscard]] Error {
 		std::string text;
 		std::exception_ptr exception;
 	};
-	[[nodiscard]] auto to_string() const noexcept -> std::string;
 
 	// having data in an internal struct behind a pointer means that error is
 	// only 8 bytes on the stack the reduced size means that if it is used in
@@ -19,6 +18,8 @@ class [[nodiscard]] Error {
 	// the stack tldr, its an optimization for the happy path, that accepts heap
 	// memory allocation in case of an error
 	std::unique_ptr<Data> ptr;
+
+	[[nodiscard]] auto to_string() const noexcept -> std::string;
 
   public:
 	~Error() noexcept;
