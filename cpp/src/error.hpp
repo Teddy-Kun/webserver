@@ -19,7 +19,7 @@ class Error {
 	Error(Error &&) noexcept;
 	Error &operator=(Error &&) noexcept;
 
-	auto warn() -> void;
-	auto log() -> void;
-	auto fatal() -> void;
+	auto warn() const -> void;
+	auto log() const -> void;
+	auto fatal() const -> void;
 };
