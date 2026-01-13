@@ -2,15 +2,15 @@
 
 #include <exception>
 #include <memory>
-#include <optional>
 #include <string>
 
 class [[nodiscard]] Error {
   private:
 	struct Data {
 		std::string text;
-		std::optional<std::exception> exception;
+		std::exception_ptr exception;
 	};
+	auto to_string() const noexcept -> std::string;
 
 	// having data in an internal struct behind a pointer means that error is only 8 bytes on the stack
 	// the reduced size means that if it is used in std::expected, the size of the result is as small as possible
@@ -23,7 +23,7 @@ class [[nodiscard]] Error {
 	// Error should always be constructed like this
 	// std::unexpected<Error>(std::in_place, ...);
 	Error(std::string text,
-		  std::optional<std::exception> exception = std::nullopt);
+		  std::exception_ptr exception = nullptr);
 	// this should be a move only type
 	Error(Error &) = delete;
 	Error &operator=(Error &) = delete;
