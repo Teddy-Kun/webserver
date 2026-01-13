@@ -11,13 +11,14 @@ Error::Error(std::string text, std::exception_ptr exception)
 	: ptr(std::make_unique<Data>(Data{std::move(text), std::move(exception)})) {
 }
 
-auto Error::to_string() const noexcept -> std::string {
-	if (!this->ptr) [[unlikely]] {
+[[nodiscard]] auto Error::to_string() const noexcept -> std::string {
+	if (!this->ptr) [[unlikely]]
 		return "invalid error (moved-from)";
-	}
 
-	// The usage of std::format technically means that, this function can throw an exception.
-	// However this should only happen, if the system runs out of memory, in which case terminating with std::terminate() is probably the best thing that can happen to the system
+	// The usage of std::format technically means that, this function can throw
+	// an exception. However this should only happen, if the system runs out of
+	// memory, in which case terminating with std::terminate() is probably the
+	// best thing that can happen to the system
 
 	if (this->ptr->exception) {
 		try {
@@ -25,7 +26,7 @@ auto Error::to_string() const noexcept -> std::string {
 		} catch (const std::exception &e) {
 			const auto buffer = e.what();
 			return std::format("{}\nException: {}", this->ptr->text, buffer);
-		} catch (const char* s) {
+		} catch (const char *s) {
 			return std::format("{}\nException: {}", this->ptr->text, s);
 		} catch (...) {
 			return std::format("{}\nUnknown non-standard exception",
@@ -37,17 +38,14 @@ auto Error::to_string() const noexcept -> std::string {
 }
 
 auto Error::warn() const noexcept -> void {
-	// println can't error here, since the formatting is hardcoded and valid
 	std::println(stderr, "warn: {}", this->to_string());
 }
 
 auto Error::log() const noexcept -> void {
-	// println can't error here, since the formatting is hardcoded and valid
 	std::println(stderr, "error: {}", this->to_string());
 }
 
 auto Error::fatal() const noexcept -> void {
-	// println can't error here, since the formatting is hardcoded and valid
 	std::println(stderr, "error: {}", this->to_string());
 	std::exit(1);
 }
