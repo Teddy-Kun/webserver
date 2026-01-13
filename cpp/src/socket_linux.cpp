@@ -1,16 +1,15 @@
 #include "error.hpp"
 #include "socket.hpp"
 #include <expected>
-#include <netinet/in.h> // Internet address family (sockaddr_in)
+#include <netinet/in.h>
 #include <print>
 #include <sys/socket.h>
 #include <vector>
 
 auto TcpListener::init() noexcept -> std::expected<TcpListener, Error> {
 	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (server_fd < 0) {
+	if (server_fd < 0)
 		return std::unexpected<Error>(std::in_place, "Error creating socket");
-	}
 
 	// 3. Define the address (IP and Port)
 	sockaddr_in address;
@@ -19,24 +18,23 @@ auto TcpListener::init() noexcept -> std::expected<TcpListener, Error> {
 	address.sin_port =
 		htons(7878); // Host-to-Network Short (Endianness conversion)
 
-	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
 		return std::unexpected<Error>(std::in_place, "Bind failed");
-	}
 
-	if (listen(server_fd, 3) < 0) {
+	if (listen(server_fd, 3) < 0)
 		return std::unexpected<Error>(std::in_place, "Listen failed");
-	}
 
 	std::println("Server is listening on port 7878");
 
-	auto listen = [&]() -> std::expected<std::vector<std::byte>, Error> {
+	auto listen =
+		[server_fd]() -> std::expected<std::vector<std::byte>, Error> {
 		// 6. Accept an incoming connection
+		sockaddr_in address;
 		socklen_t addrlen = sizeof(address);
 		int client_socket =
 			accept(server_fd, (struct sockaddr *)&address, &addrlen);
-		if (client_socket < 0) {
+		if (client_socket < 0)
 			return std::unexpected<Error>(std::in_place, "Accept failed");
-		}
 
 		// 7. Receive data
 		std::vector<std::byte> buffer(4096);
