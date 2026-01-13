@@ -11,6 +11,7 @@ class TcpListener {
 	TcpListener() = default;
 
   public:
-	static auto init() -> std::expected<TcpListener, Error>;
-	auto get_incoming() -> std::expected<std::vector<std::byte>, Error>;
+	static auto init() noexcept -> std::expected<TcpListener, Error>;
+	auto get_incoming() noexcept
+		-> std::expected<std::vector<std::byte>, Error>;
 };

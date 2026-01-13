@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 #include <vector>
 
-auto TcpListener::init() -> std::expected<TcpListener, Error> {
+auto TcpListener::init() noexcept -> std::expected<TcpListener, Error> {
 	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd < 0) {
 		return std::unexpected<Error>(std::in_place, "Error creating socket");
@@ -52,7 +52,7 @@ auto TcpListener::init() -> std::expected<TcpListener, Error> {
 	return listener;
 }
 
-auto TcpListener::get_incoming()
+auto TcpListener::get_incoming() noexcept
 	-> std::expected<std::vector<std::byte>, Error> {
 	return this->getter();
 }
