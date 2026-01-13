@@ -45,12 +45,39 @@ auto TcpListener::init() noexcept -> std::expected<TcpListener, Error> {
 				std::in_place, std::format("Accept failed: {}", client_socket));
 
 		// 7. Receive data
-		std::vector<std::byte> buffer(1024);
-		ssize_t bytes_read = read(client_socket, buffer.data(), 1024);
-		buffer.resize(bytes_read);
-		std::println("Message received: len({})", bytes_read);
+		std::vector<std::byte> full_request;
+		std::byte buffer[4096];
+		bool complete = false;
 
-		return buffer;
+		while (!complete) {
+			ssize_t bytes_read = read(client_socket, buffer, sizeof(buffer));
+
+			if (bytes_read < 0)
+				return std::unexpected<Error>(
+					std::in_place,
+					std::format("Reading request failed: {}", client_socket));
+			if (bytes_read == 0)
+				return std::unexpected<Error>(std::in_place,
+											  "Socket closed by client");
+
+			full_request.insert(full_request.end(), buffer,
+								buffer + bytes_read);
+
+			std::string_view current_data(
+				reinterpret_cast<const char *>(full_request.data()),
+				full_request.size());
+			if (current_data.ends_with("\r\n\r\n")) {
+				complete = true;
+			}
+		}
+
+		std::println("Message received: len({})", full_request.size());
+
+		// TODO: If the request has a Body, parse 'Content-Length'
+		// and continue reading until 'full_request' contains that many extra
+		// bytes.
+
+		return full_request;
 	};
 
 	auto listener = TcpListener();
