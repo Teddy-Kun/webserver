@@ -1,5 +1,4 @@
-#ifndef ERROR_H
-#define ERROR_H
+#pragma once
 
 #include <memory>
 #include <string>
@@ -24,5 +23,3 @@ class Error {
 	auto log() -> void;
 	auto fatal() -> void;
 };
-
-#endif

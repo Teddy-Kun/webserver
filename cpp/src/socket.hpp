@@ -1,5 +1,4 @@
-#ifndef SOCKET_H
-#define SOCKET_H
+#pragma once
 
 #include "error.hpp"
 #include <expected>
@@ -15,5 +14,3 @@ class TcpListener {
 	static auto init() -> std::expected<TcpListener, Error>;
 	auto get_incoming() -> std::expected<std::vector<std::byte>, Error>;
 };
-
-#endif
