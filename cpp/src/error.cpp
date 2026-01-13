@@ -2,9 +2,8 @@
 #include <exception>
 #include <optional>
 #include <print>
-#include <tuple>
 
-Error::~Error() = default;
+Error::~Error() noexcept = default;
 Error::Error(Error &&) noexcept = default;
 Error &Error::operator=(Error &&) noexcept = default;
 
@@ -13,26 +12,17 @@ Error::Error(std::string text, std::optional<std::exception> exception)
 }
 
 auto Error::warn() const noexcept -> void {
-	try {
-		std::println(stderr, "warn: {}", this->ptr->text);
-	} catch (std::exception e) {
-		std::ignore = e;
-	}
+	// println can't error here, since the formatting is hardcoded and valid
+	std::println(stderr, "warn: {}", this->ptr->text);
 }
 
 auto Error::log() const noexcept -> void {
-	try {
-		std::println(stderr, "error: {}", this->ptr->text);
-	} catch (std::exception e) {
-		std::ignore = e;
-	}
+	// println can't error here, since the formatting is hardcoded and valid
+	std::println(stderr, "error: {}", this->ptr->text);
 }
 
 auto Error::fatal() const noexcept -> void {
-	try {
-		std::println(stderr, "error: {}", this->ptr->text);
-	} catch (std::exception e) {
-		std::ignore = e;
-	}
+	// println can't error here, since the formatting is hardcoded and valid
+	std::println(stderr, "error: {}", this->ptr->text);
 	std::exit(1);
 }
