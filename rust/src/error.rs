@@ -3,10 +3,8 @@ use std::{
 	fmt::{Debug, Display},
 };
 
-/// A `dyn Error` wrapped in two Boxes, to reduce stack size from 16 to 8.
-/// Very crude and less optimal than `anyhow::Error`, but its simple and I don't want to use any crates.
 pub struct ThinError {
-	inner: Box<Box<dyn Error>>,
+	inner: Box<dyn Error>,
 }
 
 impl ThinError {
@@ -23,13 +21,13 @@ impl ThinError {
 
 impl Error for ThinError {
 	fn source(&self) -> Option<&(dyn Error + 'static)> {
-		Some((*self.inner).as_ref())
+		Some(self.inner.as_ref())
 	}
 }
 
 impl Debug for ThinError {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{:?}", *self.inner)
+		write!(f, "{:?}", self.inner)
 	}
 }
 
