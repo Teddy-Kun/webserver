@@ -1,0 +1,13 @@
+setup:
+    meson setup build --wipe --buildtype=debug
+    meson setup release --wipe --buildtype=release -Dstrip=true -Db_lto=true
+
+build-dev:
+    meson compile -C build
+
+run:
+    meson compile -C build
+    build/webserver_cpp dist/
+
+build:
+    meson compile -C release
