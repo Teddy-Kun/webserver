@@ -8,7 +8,9 @@
 #include <sys/socket.h>
 #include <vector>
 
-auto TcpListener::init(uint16_t port) noexcept -> std::expected<TcpListener, Error> {
+namespace webserver {
+auto TcpListener::init(uint16_t port) noexcept
+	-> std::expected<TcpListener, Error> {
 	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd < 0)
 		return std::unexpected<Error>(
@@ -91,3 +93,4 @@ auto TcpListener::get_incoming() noexcept
 	-> std::expected<std::vector<std::byte>, Error> {
 	return this->getter();
 }
+} // namespace webserver

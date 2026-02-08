@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 
+namespace webserver {
 class [[nodiscard]] Error {
   private:
 	struct Data {
@@ -36,3 +37,4 @@ class [[nodiscard]] Error {
 	auto log() const noexcept -> void;
 	auto fatal() const noexcept -> void;
 };
+} // namespace webserver

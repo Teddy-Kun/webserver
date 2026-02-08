@@ -3,6 +3,8 @@
 #include <format>
 #include <print>
 
+namespace webserver {
+
 Error::~Error() noexcept = default;
 Error::Error(Error &&) noexcept = default;
 Error &Error::operator=(Error &&) noexcept = default;
@@ -49,3 +51,4 @@ auto Error::fatal() const noexcept -> void {
 	std::println(stderr, "error: {}", this->to_string());
 	std::exit(1);
 }
+} // namespace webserver

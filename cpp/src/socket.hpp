@@ -5,6 +5,8 @@
 #include <expected>
 #include <functional>
 
+namespace webserver {
+
 // OS-Agnostic wrapper around TcpSockets
 class TcpListener {
   private:
@@ -12,7 +14,9 @@ class TcpListener {
 	TcpListener() = default;
 
   public:
-	static auto init(uint16_t port) noexcept -> std::expected<TcpListener, Error>;
+	static auto init(uint16_t port) noexcept
+		-> std::expected<TcpListener, Error>;
 	auto get_incoming() noexcept
 		-> std::expected<std::vector<std::byte>, Error>;
 };
+} // namespace webserver
