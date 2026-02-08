@@ -1,6 +1,7 @@
 #pragma once
 
 #include "error.hpp"
+#include "http/response.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <expected>
@@ -19,8 +20,7 @@ class TcpStream {
   public:
 	TcpStream(int socket, std::vector<std::byte> &&data) noexcept;
 	auto get_bytes() noexcept -> const std::span<const std::byte>;
-	auto write(std::span<const std::byte> response) noexcept
-		-> std::optional<Error>;
+	auto write(const HttpResponse response) noexcept -> std::optional<Error>;
 };
 
 // OS-Agnostic wrapper around TcpSockets

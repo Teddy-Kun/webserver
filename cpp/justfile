@@ -1,3 +1,8 @@
+alias s := setup
+alias b := build
+alias bd := build-dev
+alias r := run
+
 setup:
     meson setup build --wipe --buildtype=debug
     meson setup release --wipe --buildtype=release -Dstrip=true -Db_lto=true

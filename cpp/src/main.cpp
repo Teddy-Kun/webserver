@@ -3,6 +3,7 @@
 #include "html_files.hpp"
 #include "http/request.hpp"
 #include "socket.hpp"
+#include "src/http/response.hpp"
 #include "utils/format.hpp"
 #include <expected>
 #include <print>
@@ -41,7 +42,15 @@ auto main(int argc, char *argv[]) -> int {
 			req.error().log();
 			continue;
 		}
-		std::println("{}", req->to_string());
+		auto http_req = *req;
+
+		if (http_req.method != webserver::HttpMethod::Get) {
+			// TODO: respond with that
+			std::println(stderr, "Unsupported method http");
+			continue;
+		}
+
+		std::println("{}", http_req.to_string());
 
 		auto file = webserver::get_file(args->dir);
 
@@ -50,7 +59,12 @@ auto main(int argc, char *argv[]) -> int {
 			continue;
 		}
 
-		const auto res = stream.write(std::span(file->data(), file->size()));
+		auto resp = webserver::HttpResponse(
+			webserver::HttpCode::Ok,
+			std::string_view{reinterpret_cast<char *>(file->data()),
+							 file->size()});
+
+		const auto res = stream.write(resp);
 		if (res) [[unlikely]] {
 			res->log();
 		}
