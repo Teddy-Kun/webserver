@@ -9,7 +9,7 @@ project(
   ],
 )
 
-sources = ['src/socket_linux.cpp', 'src/error.cpp', 'src/html_files.cpp', 'src/main.cpp']
+sources = ['src/socket_linux.cpp', 'src/cmd.cpp', 'src/error.cpp', 'src/html_files.cpp', 'src/main.cpp']
 
 # Define your executable
 executable('webserver_cpp', sources, install: true)

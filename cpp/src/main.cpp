@@ -1,12 +1,20 @@
+#include "cmd.hpp"
 #include "error.hpp"
 #include "html_files.hpp"
 #include "socket.hpp"
+#include "utils/format.hpp"
 #include <expected>
 #include <print>
 #include <span>
 #include <string_view>
 
-auto main() -> int {
+auto main(int argc, char *argv[]) -> int {
+	auto args = webserver::parse_args(argc, argv);
+	if (!args) [[unlikely]] {
+		args.error().fatal();
+	}
+	std::println("args {}", *args);
+
 	auto res = webserver::TcpListener::init(7878);
 	if (!res) [[unlikely]] {
 		res.error().fatal();
@@ -27,7 +35,7 @@ auto main() -> int {
 							bytes.size()};
 		std::println("Message:\n{}\n", sv);
 
-		auto file = webserver::get_file();
+		auto file = webserver::get_file(args->dir);
 
 		if (!file) {
 			file.error().log();

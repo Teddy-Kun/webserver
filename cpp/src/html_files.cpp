@@ -7,8 +7,9 @@
 #include <vector>
 
 namespace webserver {
-auto get_file() noexcept -> std::expected<std::vector<std::byte>, Error> {
-	const std::filesystem::path path = "index.html";
+auto get_file(std::filesystem::path base_dir) noexcept
+	-> std::expected<std::vector<std::byte>, Error> {
+	const std::filesystem::path path = base_dir.append("index.html");
 
 	auto file = std::ifstream(path, std::ios::binary);
 	if (!file.is_open()) [[unlikely]] {
