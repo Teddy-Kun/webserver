@@ -17,9 +17,10 @@ class TcpStream {
 	const int client_socket;
 
   public:
-	TcpStream(int socket, std::vector<std::byte> &&data);
+	TcpStream(int socket, std::vector<std::byte> &&data) noexcept;
 	auto get_bytes() noexcept -> const std::span<const std::byte>;
-	auto write(std::span<const std::byte> response) -> std::optional<Error>;
+	auto write(std::span<const std::byte> response) noexcept
+		-> std::optional<Error>;
 };
 
 // OS-Agnostic wrapper around TcpSockets

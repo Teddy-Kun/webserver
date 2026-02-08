@@ -14,14 +14,14 @@
 #include <vector>
 
 namespace webserver {
-TcpStream::TcpStream(int client_socket, std::vector<std::byte> &&data)
+TcpStream::TcpStream(int client_socket, std::vector<std::byte> &&data) noexcept
 	: data(std::move(data)), client_socket(client_socket) {}
 
 auto TcpStream::get_bytes() noexcept -> const std::span<const std::byte> {
 	return this->data;
 }
 
-auto TcpStream::write(const std::span<const std::byte> response)
+auto TcpStream::write(const std::span<const std::byte> response) noexcept
 	-> std::optional<Error> {
 	auto http_response = std::format(
 		"HTTP/1.1 200 OK\r\n"
