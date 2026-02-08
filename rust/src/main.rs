@@ -1,4 +1,5 @@
 use std::{
+	error::Error,
 	fs,
 	io::{BufRead, BufReader, Write},
 	net::{TcpListener, TcpStream},
@@ -6,12 +7,10 @@ use std::{
 };
 
 use crate::{
-	error::ThinError,
 	http::{HttpMethod, HttpResponse, HttpStatusCode},
 	thread_pool::ThreadPool,
 };
 
-mod error;
 mod http;
 mod thread_pool;
 
@@ -29,7 +28,7 @@ fn main() {
 	}
 }
 
-fn create_listener() -> Result<(), ThinError> {
+fn create_listener() -> Result<(), Box<dyn Error>> {
 	let listener = TcpListener::bind("127.0.0.1:7878")?;
 	let thread_pool = ThreadPool::new(NonZeroUsize::new(8).unwrap());
 
@@ -70,24 +69,22 @@ fn create_listener() -> Result<(), ThinError> {
 	Ok(())
 }
 
-fn handle_connection(stream: &mut TcpStream) -> Result<(), ThinError> {
+fn handle_connection(stream: &mut TcpStream) -> Result<(), Box<dyn Error>> {
 	let buf_reader = BufReader::new(&*stream);
 
 	let mut lines = buf_reader.lines();
 
-	let head = lines.next().ok_or(ThinError::str("missing http head"))??;
+	let head = lines.next().ok_or(String::from("missing http head"))??;
 
 	let mut splitter = head.split_ascii_whitespace();
 
-	let method = splitter
-		.next()
-		.ok_or(ThinError::str("missing http method"))?;
+	let method = splitter.next().ok_or(String::from("missing http method"))?;
 	let req_uri = splitter
 		.next()
-		.ok_or(ThinError::str("missing http request-uri"))?;
+		.ok_or(String::from("missing http request-uri"))?;
 	let version = splitter
 		.next()
-		.ok_or(ThinError::str("missing http version"))?;
+		.ok_or(String::from("missing http version"))?;
 
 	let method = HttpMethod::try_from(method)?; // validate and convert str to our enum
 
@@ -100,9 +97,7 @@ fn handle_connection(stream: &mut TcpStream) -> Result<(), ThinError> {
 	}
 
 	if method != HttpMethod::Get {
-		return Err(ThinError::new(
-			format!("unsupported http method: {method}").into(),
-		));
+		return Err(format!("unsupported http method: {method}").into());
 	}
 	#[cfg(feature = "print-headers")]
 	{
