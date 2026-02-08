@@ -1,14 +1,42 @@
 #include "error.hpp"
 #include "socket.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <expected>
 #include <format>
 #include <netinet/in.h>
+#include <optional>
 #include <print>
+#include <span>
+#include <string_view>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <vector>
 
 namespace webserver {
+TcpStream::TcpStream(int client_socket, std::vector<std::byte> &&data)
+	: data(std::move(data)), client_socket(client_socket) {}
+
+auto TcpStream::get_bytes() noexcept -> const std::span<const std::byte> {
+	return this->data;
+}
+
+auto TcpStream::write(const std::span<const std::byte> response)
+	-> std::optional<Error> {
+	// constexpr std::string_view response = "Hello World\n";
+
+	auto bytes_sent =
+		send(this->client_socket, response.data(), response.size(), 0);
+
+	if (bytes_sent == -1) {
+		return std::make_optional<Error>("Error sending response");
+	}
+
+	std::println("Send {} bytes", bytes_sent);
+
+	return std::nullopt;
+};
+
 auto TcpListener::init(uint16_t port) noexcept
 	-> std::expected<TcpListener, Error> {
 	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -36,12 +64,11 @@ auto TcpListener::init(uint16_t port) noexcept
 
 	std::println("Server is listening on port 7878");
 
-	auto listen =
-		[server_fd]() -> std::expected<std::vector<std::byte>, Error> {
+	auto listen = [server_fd]() -> std::expected<TcpStream, Error> {
 		// 6. Accept an incoming connection
 		sockaddr_in address;
 		socklen_t addrlen = sizeof(address);
-		int client_socket =
+		auto client_socket =
 			accept(server_fd, (struct sockaddr *)&address, &addrlen);
 		if (client_socket < 0)
 			return std::unexpected<Error>(
@@ -80,7 +107,7 @@ auto TcpListener::init(uint16_t port) noexcept
 		// and continue reading until 'full_request' contains that many extra
 		// bytes.
 
-		return full_request;
+		return TcpStream(client_socket, std::move(full_request));
 	};
 
 	auto listener = TcpListener();
@@ -89,8 +116,7 @@ auto TcpListener::init(uint16_t port) noexcept
 	return listener;
 }
 
-auto TcpListener::get_incoming() noexcept
-	-> std::expected<std::vector<std::byte>, Error> {
+auto TcpListener::get_incoming() noexcept -> std::expected<TcpStream, Error> {
 	return this->getter();
 }
 } // namespace webserver
