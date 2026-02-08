@@ -23,10 +23,19 @@ auto TcpStream::get_bytes() noexcept -> const std::span<const std::byte> {
 
 auto TcpStream::write(const std::span<const std::byte> response)
 	-> std::optional<Error> {
-	// constexpr std::string_view response = "Hello World\n";
+	auto http_response = std::format(
+		"HTTP/1.1 200 OK\r\n"
+		"Content-Type: text/html; charset=UTF-8\r\n"
+		"Content-Length: {}\r\n"
+		"Connection: close\r\n"
+		"\r\n"
+		"{}",
+		response.size(),
+		std::string_view(reinterpret_cast<const char *>(response.data()),
+						 response.size()));
 
-	auto bytes_sent =
-		send(this->client_socket, response.data(), response.size(), 0);
+	auto bytes_sent = send(this->client_socket, http_response.data(),
+						   http_response.size(), 0);
 
 	if (bytes_sent == -1) {
 		return std::make_optional<Error>("Error sending response");
