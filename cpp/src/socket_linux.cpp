@@ -7,7 +7,6 @@
 #include <netinet/in.h>
 #include <optional>
 #include <print>
-#include <ranges>
 #include <span>
 #include <string_view>
 #include <sys/socket.h>
@@ -46,42 +45,6 @@ auto TcpStream::write(const std::span<const std::byte> response) noexcept
 
 	return std::nullopt;
 };
-
-HttpRequest::HttpRequest(std::string_view method, std::string_view uri,
-						 std::string_view version, std::string_view rest)
-	: method(std::move(method)), uri(std::move(uri)),
-	  version(std::move(version)), rest(std::move(rest)) {}
-
-auto HttpRequest::from_string(std::string_view str) noexcept
-	-> std::expected<HttpRequest, Error> {
-	auto find_next = [&](size_t start) -> size_t {
-		return str.find(' ', start);
-	};
-
-	size_t method_end = find_next(0);
-	if (method_end == std::string_view::npos) [[unlikely]] {
-		return std::unexpected<Error>(std::in_place, "illegal HTTP header");
-	}
-
-	size_t uri_end = find_next(method_end + 1);
-	if (uri_end == std::string_view::npos) [[unlikely]] {
-		return std::unexpected<Error>(std::in_place, "illegal HTTP header");
-	}
-
-	size_t version_end = find_next(uri_end + 1);
-	if (version_end == std::string_view::npos) [[unlikely]] {
-		return std::unexpected<Error>(std::in_place, "illegal HTTP header");
-	}
-	return HttpRequest(str.substr(0, method_end),
-					   str.substr(method_end + 1, uri_end - method_end - 1),
-					   str.substr(uri_end + 1, version_end - uri_end - 1),
-					   str.substr(version_end + 1));
-}
-
-auto HttpRequest::to_string() noexcept -> std::string {
-	return std::format("METHOD: {}; URI: {}; VERSION: {}", this->method,
-					   this->uri, this->version);
-}
 
 auto TcpListener::init(uint16_t port) noexcept
 	-> std::expected<TcpListener, Error> {

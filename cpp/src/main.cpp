@@ -1,6 +1,7 @@
 #include "cmd.hpp"
 #include "error.hpp"
 #include "html_files.hpp"
+#include "http/request.hpp"
 #include "socket.hpp"
 #include "utils/format.hpp"
 #include <expected>
