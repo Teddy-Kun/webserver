@@ -45,8 +45,9 @@ auto main(int argc, char *argv[]) -> int {
 		auto http_req = *req;
 
 		if (http_req.method != webserver::HttpMethod::Get) {
-			// TODO: respond with that
-			std::println(stderr, "Unsupported method http");
+			auto resp =
+				webserver::HttpResponse(webserver::HttpCode::MethodNotAllowed);
+			stream.write(resp);
 			continue;
 		}
 
