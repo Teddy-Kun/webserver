@@ -17,7 +17,8 @@ enum class HttpMethod {
 };
 
 auto constexpr to_string(HttpMethod method) -> std::string;
-auto constexpr from_string(std::string_view str) -> std::optional<HttpMethod>;
+auto constexpr http_req_type_from_string(std::string_view str)
+	-> std::optional<HttpMethod>;
 
 class HttpRequest {
   public:
