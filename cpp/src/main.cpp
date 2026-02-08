@@ -31,9 +31,16 @@ auto main(int argc, char *argv[]) -> int {
 
 		auto stream = *msg;
 		auto bytes = stream.get_bytes();
-		std::string_view sv{reinterpret_cast<const char *>(bytes.data()),
-							bytes.size()};
-		std::println("Message:\n{}\n", sv);
+		std::string_view string_req{
+			reinterpret_cast<const char *>(bytes.data()), bytes.size()};
+		std::println("Message:\n{}\n", string_req);
+
+		auto req = webserver::HttpRequest::from_string(string_req);
+		if (!req) [[unlikely]] {
+			req.error().log();
+			continue;
+		}
+		std::println("{}", req->to_string());
 
 		auto file = webserver::get_file(args->dir);
 

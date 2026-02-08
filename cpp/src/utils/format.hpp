@@ -1,5 +1,9 @@
 // source https://github.com/nathan-baggs/ufps/blob/main/src/utils/formatter.h
 
+// Including this file allows the standard formatter to be used on any object
+// that either has a member function `std::string to_string()` or has a free
+// floating function `std::string to_string(MyType arg)`
+
 #pragma once
 
 #include <concepts>
