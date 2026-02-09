@@ -53,7 +53,7 @@ auto main(int argc, char *argv[]) -> int {
 
 		std::println("{}", http_req.to_string());
 
-		auto file = webserver::get_file(args->dir);
+		auto file = webserver::get_file(args->dir, http_req.uri);
 
 		if (!file) {
 			file.error().log();

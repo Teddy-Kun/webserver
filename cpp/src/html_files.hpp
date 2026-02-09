@@ -6,6 +6,6 @@
 #include <vector>
 
 namespace webserver {
-auto get_file(std::filesystem::path base_dir) noexcept
+auto get_file(std::filesystem::path base_dir, std::string_view req) noexcept
 	-> std::expected<std::vector<std::byte>, Error>;
 };

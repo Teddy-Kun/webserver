@@ -1,5 +1,6 @@
 #pragma once
 
+#include "src/http/response.hpp"
 #include <exception>
 #include <memory>
 #include <string>
@@ -10,6 +11,7 @@ class [[nodiscard]] Error {
 	struct Data {
 		std::string text;
 		std::exception_ptr exception;
+		HttpCode code;
 	};
 
 	// having data in an internal struct behind a pointer means that error is
@@ -26,7 +28,8 @@ class [[nodiscard]] Error {
 	~Error() noexcept;
 	// Error should always be constructed like this
 	// std::unexpected<Error>(std::in_place, ...);
-	Error(std::string text, std::exception_ptr exception = nullptr);
+	Error(std::string text, std::exception_ptr exception = nullptr,
+		  HttpCode code = HttpCode::InternalServerError);
 	// this should be a move only type
 	Error(Error &) = delete;
 	Error &operator=(Error &) = delete;
