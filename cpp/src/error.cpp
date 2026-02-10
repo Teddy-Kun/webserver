@@ -9,8 +9,8 @@ Error::~Error() noexcept = default;
 Error::Error(Error &&) noexcept = default;
 Error &Error::operator=(Error &&) noexcept = default;
 
-Error::Error(std::string text, std::exception_ptr exception)
-	: ptr(std::make_unique<Data>(Data{std::move(text), std::move(exception)})) {
+Error::Error(std::string text, std::exception_ptr exception, HttpCode code)
+	: ptr(std::make_unique<Data>(Data{std::move(text), std::move(exception), std::move(code)})) {
 }
 
 [[nodiscard]] auto Error::to_string() const noexcept -> std::string {
