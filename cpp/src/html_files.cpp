@@ -12,22 +12,30 @@ auto get_file(std::filesystem::path base_dir, std::string_view uri) noexcept
 	auto req = uri.size() ? uri.substr(1) : uri;
 
 	std::filesystem::path path;
-	if (req.size() == 0)
+	bool has_file_extension = req.contains('.');
+	if (req.size() == 0) {
 		path = base_dir.append("index.html");
-	else {
-		if (req.contains('.'))
+	} else {
+		if (has_file_extension) {
 			path = base_dir.append(req);
-		else
+		} else {
 			path = base_dir.append(std::format("{}.html", req));
+		}
 	}
 
 	auto file = std::ifstream(path, std::ios::binary);
 	if (!file.is_open()) [[unlikely]] {
-		path = base_dir.append("404.html");
-		file = std::ifstream(path, std::ios::binary);
-		if (!file.is_open())
-			return std::unexpected<Error>(std::in_place,
-										  "Could not open file index.html");
+		auto old_path = std::move(path);
+		if (!has_file_extension) {
+			path = base_dir.append("404.html");
+			file = std::ifstream(path, std::ios::binary);
+		}
+		if (!file.is_open()) {
+			return std::unexpected<Error>(
+				std::in_place,
+				std::format("Could not open file '{}' and fallback also failed",
+							old_path.string()));
+		}
 	}
 
 	std::error_code ec;
