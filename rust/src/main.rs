@@ -28,7 +28,7 @@ fn main() {
 	}
 }
 
-fn create_listener() -> Result<(), Box<dyn Error>> {
+fn create_listener() -> Result<(), std::io::Error> {
 	let listener = TcpListener::bind("127.0.0.1:7878")?;
 	let thread_pool = ThreadPool::new(NonZeroUsize::new(8).unwrap());
 

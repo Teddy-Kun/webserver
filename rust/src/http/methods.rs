@@ -1,4 +1,4 @@
-use std::{error::Error, fmt::Display};
+use std::fmt::Display;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods
@@ -22,7 +22,7 @@ impl Display for HttpMethod {
 
 // validate &str for being a valid http method
 impl TryFrom<&str> for HttpMethod {
-	type Error = Box<dyn Error>;
+	type Error = String;
 
 	fn try_from(value: &str) -> Result<Self, Self::Error> {
 		let res = match value {
@@ -35,7 +35,7 @@ impl TryFrom<&str> for HttpMethod {
 			"OPTIONS" => HttpMethod::Options,
 			"TRACE" => HttpMethod::Trace,
 			"PATCH" => HttpMethod::Patch,
-			s => return Err(format!("illegal http method: {s}").into()),
+			s => return Err(format!("illegal http method: {s}")),
 		};
 
 		Ok(res)
