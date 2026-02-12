@@ -1,3 +1,5 @@
+#pragma once
+
 #include "src/error.hpp"
 #include <expected>
 #include <optional>
