@@ -54,6 +54,6 @@ auto get_file(std::filesystem::path base_dir, std::string_view uri) noexcept
 			std::in_place, "Could not read file index.html");
 	}
 
-	return buffer;
+	return std::expected<std::vector<std::byte>, Error>(std::move(buffer));
 }
 } // namespace webserver

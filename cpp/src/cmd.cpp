@@ -25,6 +25,6 @@ auto parse_args(int argc, char *argv[]) noexcept
 		args.dir = path;
 	}
 
-	return args;
+	return std::expected<CmdArgs, Error>(std::move(args));
 }
 } // namespace webserver
