@@ -137,13 +137,10 @@ fn handle_connection(stream: &mut TcpStream) -> Result<(), Box<dyn Error>> {
 
 	let response = match http {
 		Ok(http) => HttpResponse::with_content(HttpStatusCode::Ok, http),
-		Err(_e) => {
-			if let Ok(not_found) = fs::read_to_string("./dist/404.html") {
-				HttpResponse::with_content(HttpStatusCode::NotFound, not_found)
-			} else {
-				HttpResponse::new(HttpStatusCode::NotFound)
-			}
-		}
+		Err(_e) => match fs::read_to_string("./dist/404.html") {
+			Ok(not_found) => HttpResponse::with_content(HttpStatusCode::NotFound, not_found),
+			Err(_) => HttpResponse::new(HttpStatusCode::NotFound),
+		},
 	};
 
 	stream.write_all(response.into_string().as_bytes())?;
