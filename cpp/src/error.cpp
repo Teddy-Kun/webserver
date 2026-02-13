@@ -2,16 +2,22 @@
 #include <exception>
 #include <format>
 #include <print>
+#include <utility>
 
 namespace webserver {
 
 Error::~Error() noexcept = default;
-Error::Error(Error &&) noexcept = default;
-Error &Error::operator=(Error &&) noexcept = default;
+Error::Error(Error &&other) noexcept : ptr(std::move(other.ptr)) {}
+Error &Error::operator=(Error &&other) noexcept {
+	if (this != &other) [[likely]] {
+		std::swap(this->ptr, other.ptr);
+	}
+	return *this;
+};
 
 Error::Error(std::string text, std::exception_ptr exception, HttpCode code)
-	: ptr(std::make_unique<Data>(Data{std::move(text), std::move(exception), std::move(code)})) {
-}
+	: ptr(std::make_unique<Data>(
+		  Data{std::move(text), std::move(exception), std::move(code)})) {}
 
 [[nodiscard]] auto Error::to_string() const noexcept -> std::string {
 	if (!this->ptr) [[unlikely]]
